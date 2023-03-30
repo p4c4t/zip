@@ -3,23 +3,20 @@
 #include <iterator>
 
 template <typename TupleT, std::size_t... Indexes>
-bool any_equal(const TupleT& x, const TupleT& y, std::index_sequence<Indexes...>) {
-    bool any_eq = false;
-    ((any_eq = (any_eq || std::get<Indexes>(x) == std::get<Indexes>(y))), ...);
-    return any_eq;
+bool AnyEqual(const TupleT& x, const TupleT& y, std::index_sequence<Indexes...>) {
+    bool any = false;
+    ((any = (any || std::get<Indexes>(x) == std::get<Indexes>(y))), ...);
+    return any;
 }
 
+
 template <typename... Iters>
-struct ZipAbstraction {
-
-    ZipAbstraction(const std::tuple<Iters...>& begins, const std::tuple<Iters...>& ends)
-        : begins_(begins), ends_(ends) {
-    }
-
-
-
+class ZipAbstraction {
     std::tuple<Iters...> begins_;
     std::tuple<Iters...> ends_;
+public:
+    ZipAbstraction(const std::tuple<Iters...>& begins, const std::tuple<Iters...>& ends)
+        : begins_(begins), ends_(ends) { }
 
     struct ZipIterator {
         using iterator_category = std::forward_iterator_tag;
@@ -36,7 +33,7 @@ struct ZipAbstraction {
         }
 
         ZipIterator& operator++() {
-            curr = std::apply([](auto... x) { return std::make_tuple(std::next(x)...); }, curr);
+            curr = std::apply([](auto&... x) { return std::make_tuple(std::next(x)...); }, curr);
             return *this;
         }
 
@@ -46,12 +43,11 @@ struct ZipAbstraction {
             return tmp;
         }
         value_type operator*() {
-            auto a = std::apply([](auto... x) { return std::tie(*x...); }, curr);
-            return a;
+            return std::apply([](auto&... x) { return std::tie(*x...); }, curr);
         }
 
         bool operator==(const ZipIterator& other) const {
-            return any_equal<>(curr, other.curr, std::make_index_sequence<std::tuple_size_v<decltype(curr)>>());
+            return AnyEqual<>(curr, other.curr, std::make_index_sequence<std::tuple_size_v<decltype(curr)>>());
         }
         bool operator!=(const ZipIterator& other) const {
             return !operator==(other);
