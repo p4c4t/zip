@@ -47,6 +47,30 @@ TEST_CASE("Zip1_read") {
     REQUIRE("1 2 3 4 5 " == stream.str());
 }
 
+TEST_CASE("Zip1_write") {
+    std::vector<int> a = {1, 2, 3, 4, 5};
+    std::array<char, 3> c = {'a', 'b', 'c'};
+
+    for(auto&& [num, ch] : Zip(a, c)) {
+        num++;
+        ch = ch + 1;
+    }
+
+    REQUIRE(a == std::vector<int>{2, 3, 4, 4, 5});
+    REQUIRE(c == std::array<char, 3>{'b', 'c', 'd'});
+}
+
+TEST_CASE("Zip1_partial_write") {
+    std::vector<int> a = {1, 2, 3, 4, 5};
+    const std::array<char, 3> c = {'a', 'b', 'c'};
+
+    for(auto&& [num, ch] : Zip(a, c)) {
+        num++;
+    }
+
+    REQUIRE(a == std::vector<int>{2, 3, 4, 4, 5});
+    REQUIRE(c == std::array<char, 3>{'a', 'b', 'c'});
+}
 
 TEST_CASE("AnyEqual") {
     REQUIRE(AnyEqual(
