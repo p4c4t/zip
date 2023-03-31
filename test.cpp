@@ -1,6 +1,7 @@
 #define CATCH_CONFIG_MAIN
+
 #include "catch.hpp"
-#include "zip.h"
+#include "zip.hpp"
 
 #include <forward_list>
 #include <sstream>
@@ -10,7 +11,7 @@ TEST_CASE("Zip2_read") {
     const std::forward_list<std::string> b = {"one", "two", "three"};
     std::stringstream stream;
 
-    for (const auto& [first, second] : Zip(a, b)) {
+    for (const auto &[first, second]: Zip(a, b)) {
         stream << first;
         stream << ":" << second;
         stream << " ";
@@ -25,7 +26,7 @@ TEST_CASE("Zip3_read") {
     const int c[]{-1, -2, -3, -4};
     std::stringstream stream2;
 
-    for (const auto& [first, second, third] : Zip(a, b, c)) {
+    for (const auto &[first, second, third]: Zip(a, b, c)) {
         stream2 << first;
         stream2 << ":" << second;
         stream2 << ":" << third;
@@ -39,7 +40,7 @@ TEST_CASE("Zip1_read") {
     std::vector<int> a = {1, 2, 3, 4, 5};
     std::stringstream stream;
 
-    for (const auto& [first] : Zip(a)) {
+    for (const auto &[first]: Zip(a)) {
         stream << first;
         stream << " ";
     }
@@ -51,7 +52,7 @@ TEST_CASE("Zip1_write") {
     std::vector<int> a = {1, 2, 3, 4, 5};
     std::array<char, 3> c = {'a', 'b', 'c'};
 
-    for(auto&& [num, ch] : Zip(a, c)) {
+    for (auto &&[num, ch]: Zip(a, c)) {
         num++;
         ch = ch + 1;
     }
@@ -64,7 +65,7 @@ TEST_CASE("Zip1_partial_write") {
     std::vector<int> a = {1, 2, 3, 4, 5};
     const std::array<char, 3> c = {'a', 'b', 'c'};
 
-    for(auto&& [num, ch] : Zip(a, c)) {
+    for (auto &&[num, ch]: Zip(a, c)) {
         num++;
     }
 
