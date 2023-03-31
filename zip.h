@@ -2,6 +2,20 @@
 
 #include <iterator>
 
+
+
+template<typename T>
+struct TypesOf {
+    using iter_type = decltype(T().begin());
+    using value_type = decltype(*iter_type());
+};
+
+template<typename V, size_t n>
+struct TypesOf<V[n]> {
+    using iter_type = V *;
+    using value_type = V;
+};
+
 template<typename TupleT, std::size_t... Indexes>
 bool AnyEqual(const TupleT &x, const TupleT &y, std::index_sequence<Indexes...>) {
     bool any = false;
@@ -9,31 +23,33 @@ bool AnyEqual(const TupleT &x, const TupleT &y, std::index_sequence<Indexes...>)
     return any;
 }
 
+template<typename... Seqs>
+class Zip {
+    using IterTuple = std::tuple<typename TypesOf<Seqs>::iter_type...>;
+    using ValueTuple = std::tuple<typename TypesOf<Seqs>::value_type &...>;
 
-template<typename... Iters>
-class ZipAbstraction {
-    std::tuple<Iters...> begins_;
-    std::tuple<Iters...> ends_;
+    IterTuple begins_;
+    IterTuple ends_;
+
 public:
-    ZipAbstraction(const std::tuple<Iters...> &begins, const std::tuple<Iters...> &ends)
-            : begins_(begins), ends_(ends) {}
+    explicit Zip(Seqs &... seq) :
+            begins_(std::make_tuple(std::begin(seq)...)),
+            ends_(std::make_tuple(std::end(seq)...)) {}
 
     struct ZipIterator {
         using iterator_category = std::forward_iterator_tag;
         using difference_type = std::ptrdiff_t;
 
-        using value_type = std::tuple<decltype(*Iters()) &...>;
+        using value_type = ValueTuple;
         using pointer = value_type *;
         using reference = value_type &;
 
-        std::tuple<Iters...> curr;
+        IterTuple curr;
 
-        ZipIterator(const std::tuple<Iters...> &iters) {
-            curr = iters;
-        }
+        explicit ZipIterator(const IterTuple &iterTuple) : curr(iterTuple) {}
 
         ZipIterator &operator++() {
-            curr = std::apply([](auto &... x) { return std::make_tuple(std::next(x)...); }, curr);
+            std::apply([](auto &... x) { (++x, ...); }, curr);
             return *this;
         }
 
@@ -48,7 +64,7 @@ public:
         }
 
         bool operator==(const ZipIterator &other) const {
-            return AnyEqual<>(curr, other.curr, std::make_index_sequence<std::tuple_size_v<decltype(curr)>>());
+            return AnyEqual<>(curr, other.curr, std::make_index_sequence<sizeof...(Seqs)>());
         }
 
         bool operator!=(const ZipIterator &other) const {
@@ -64,8 +80,3 @@ public:
         return ZipIterator(ends_);
     }
 };
-
-template<typename... Seqs>
-auto Zip(Seqs &... seq) {
-    return ZipAbstraction(std::make_tuple(std::begin(seq)...), std::make_tuple(std::end(seq)...));
-}

@@ -90,4 +90,3 @@ TEST_CASE("AnyEqual") {
             std::make_index_sequence<2>()
     ));
 }
-
